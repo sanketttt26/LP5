@@ -1,2 +1,4 @@
+#### RUN CPP FILES FOR HPC ONLY OPENMP ONES  (NOT FOR CUDA) ###
+
 g++ file-name.cpp -o file-name.exe -fopenmp
 ./file-name.exe
