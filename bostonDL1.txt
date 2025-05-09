@@ -1,0 +1,109 @@
+// initial startup commands to set up the project and install tensorflow
+
+pip install --upgrade pip  
+pip install tensorflow==2.10
+
+//check version just to confirm
+pip show tensorflow
+
+
+
+
+//import the packages
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Input
+from tensorflow.keras.optimizers import Adam
+
+
+
+//read the csv file change the path to your location atleast
+
+df = pd.read_csv("/Users/lenovo/Desktop/BostonHousing.csv")
+df = df.dropna()
+
+
+//text
+df.head()
+
+
+//dont know why must be preprocessing step not sure
+X = df.drop("MEDV", axis=1).values
+y = df["MEDV"].values
+
+
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+
+//this is complex model with 128 layers and 64 neurons
+model = Sequential([
+    Input(shape=(X_train.shape[1],)),
+    Dense(128, activation='relu'),
+    Dropout(0.3),
+    Dense(64, activation='relu'),
+    Dense(1)  # Output layer for regression
+])
+
+
+
+//this is simple model with 64 layers and 32 neurons
+model = Sequential([
+    Input(shape=(X_train.shape[1],)),
+    Dense(64, activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(1)  # Output layer for regression
+])
+
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mae'])
+
+
+model.fit(X_train, y_train, epochs=200, batch_size=16, validation_split=0.1, verbose=1)
+
+
+y_pred = model.predict(X_test).flatten()
+
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R² Score: {r2:.2f}")
+
+//Step 7: Make predictions
+predictions = model.predict(X_test)
+
+//You can now compare predictions with actual values
+print(f"Predictions: {predictions[:5]}")
+print(f"Actual Prices: {y_test[:5]}")
+
+
+
+//visualization optional but required so that you can atleast talk something abt it
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+//Get predictions
+predictions = model.predict(X_test)
+
+//Downsample the data (e.g., every 10th point)
+sampled_y_test = y_test[:40]
+sampled_predictions = predictions[:40]
+
+//Plot regression line with the downsampled data
+sns.regplot(x=sampled_y_test, y=sampled_predictions)
+plt.title("Regression Line for Predicted values (Downsampled)")
+plt.show()
+
