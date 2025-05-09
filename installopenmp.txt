@@ -1,0 +1,12 @@
+##### Install and Use OpenMP on Ubuntu
+sudo apt update
+sudo apt install build-essential
+
+
+This will install:
+
+gcc and g++ (C/C++ compilers)
+
+make and standard libraries
+
+✅ GCC includes OpenMP support by default (via -fopenmp flag).
