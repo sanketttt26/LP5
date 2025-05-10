@@ -2,6 +2,8 @@
 #include <omp.h>
 #include <vector>
 #include <climits>
+#include <cstdlib> // for rand() and srand()
+#include <ctime>   // for time()
 
 using namespace std;
 
@@ -46,14 +48,21 @@ int main()
     cin >> n;
 
     vector<int> arr(n);
+    srand(time(0)); // Seed the random number generator
 
-    // Input array elements from user
-    cout << "Enter " << n << " integer values:\n";
+    // Generate random array elements
     for (int i = 0; i < n; ++i)
     {
-        cout << "Element " << i + 1 << ": ";
-        cin >> arr[i];
+        arr[i] = rand() % 1000; // Random values from 0 to 999
     }
+
+    // Print generated array
+    cout << "\nGenerated Array:\n";
+    for (int i = 0; i < n; ++i)
+    {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
 
     // Result variables
     int serial_min, serial_max, serial_sum;
