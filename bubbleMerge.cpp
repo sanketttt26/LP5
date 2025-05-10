@@ -99,8 +99,12 @@ int main()
     vector<int> arr(n);
     srand(time(0));
 
+    // Generate random numbers between 0 and 1000
     for (int i = 0; i < n; ++i)
-        arr[i] = rand() % 10000;
+        arr[i] = rand() % 1001;
+
+    cout << "Generated Array: ";
+    printArray(arr);
 
     vector<int> arr1 = arr;
     vector<int> arr2 = arr;
