@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -33,23 +35,20 @@ int main()
     B = (float *)malloc(size);
     C = (float *)malloc(size);
 
+    // Seed for random number generation
+    srand(time(0));
+
+    // Generate random values for matrices A and B
+    for (int i = 0; i < N * N; i++)
+    {
+        A[i] = rand() % 100; // Random values from 0 to 99
+        B[i] = rand() % 100;
+    }
+
     // Allocate memory on device
     cudaMalloc(&d_A, size);
     cudaMalloc(&d_B, size);
     cudaMalloc(&d_C, size);
-
-    // Input matrices from user
-    cout << "Enter elements for Matrix A (" << N * N << " values):" << endl;
-    for (int i = 0; i < N * N; i++)
-    {
-        cin >> A[i];
-    }
-
-    cout << "Enter elements for Matrix B (" << N * N << " values):" << endl;
-    for (int i = 0; i < N * N; i++)
-    {
-        cin >> B[i];
-    }
 
     // Copy data to device
     cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
@@ -73,7 +72,7 @@ int main()
     {
         for (int j = 0; j < N; j++)
         {
-            cout << A[i * N + j] << " ";
+            cout << A[i * N + j] << "\t";
         }
         cout << endl;
     }
@@ -83,7 +82,7 @@ int main()
     {
         for (int j = 0; j < N; j++)
         {
-            cout << B[i * N + j] << " ";
+            cout << B[i * N + j] << "\t";
         }
         cout << endl;
     }
@@ -93,7 +92,7 @@ int main()
     {
         for (int j = 0; j < N; j++)
         {
-            cout << C[i * N + j] << " ";
+            cout << C[i * N + j] << "\t";
         }
         cout << endl;
     }
