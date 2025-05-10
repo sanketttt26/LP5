@@ -1,82 +1,154 @@
 #include <iostream>
-#include <omp.h>
-#include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <climits>
+#include <cuda_runtime.h>
 
 using namespace std;
 
-// Serial version of Min, Max, Sum, and Average
-void serialOperations(const vector<int> &arr, int &min_val, int &max_val, int &sum_val, double &average_val)
+// CUDA kernel to perform vector addition
+__global__ void vectorAdd(int *A, int *B, int *C, int N)
 {
-    min_val = INT_MAX;
-    max_val = INT_MIN;
-    sum_val = 0;
-
-    for (int i = 0; i < arr.size(); ++i)
-    {
-        min_val = min(min_val, arr[i]);
-        max_val = max(max_val, arr[i]);
-        sum_val += arr[i];
-    }
-    average_val = static_cast<double>(sum_val) / arr.size();
-}
-
-// Parallel version of Min, Max, Sum, and Average
-void parallelOperations(const vector<int> &arr, int &min_val, int &max_val, int &sum_val, double &average_val)
-{
-    min_val = INT_MAX;
-    max_val = INT_MIN;
-    sum_val = 0;
-
-// Parallel reduction for Min, Max, Sum
-#pragma omp parallel for reduction(min : min_val) reduction(max : max_val) reduction(+ : sum_val)
-    for (int i = 0; i < arr.size(); ++i)
-    {
-        min_val = min(min_val, arr[i]);
-        max_val = max(max_val, arr[i]);
-        sum_val += arr[i];
-    }
-
-    average_val = static_cast<double>(sum_val) / arr.size();
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < N)
+        C[i] = A[i] + B[i];
 }
 
 int main()
 {
-    int n;
-    cout << "Enter size of array: ";
-    cin >> n;
+    int N;
+    cout << "Enter size of vectors: ";
+    cin >> N;
 
-    vector<int> arr(n);
-    srand(time(0));
+    int size = N * sizeof(int);
 
-    // Fill the array with random numbers between 0 and 9999
-    for (int i = 0; i < n; ++i)
-        arr[i] = rand() % 10000;
+    // Allocate host memory
+    int *A = (int *)malloc(size);
+    int *B = (int *)malloc(size);
+    int *C = (int *)malloc(size);
 
-    // Variables to store the results of Min, Max, Sum, and Average
-    int serial_min, serial_max, serial_sum;
-    double serial_average;
+    // Take user input for vector A
+    cout << "Enter elements of vector A:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "A[" << i << "]: ";
+        cin >> A[i];
+    }
 
-    int parallel_min, parallel_max, parallel_sum;
-    double parallel_average;
+    // Take user input for vector B
+    cout << "Enter elements of vector B:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "B[" << i << "]: ";
+        cin >> B[i];
+    }
 
-    double start, end;
+    // Allocate device memory
+    int *d_A, *d_B, *d_C;
+    cudaMalloc((void **)&d_A, size);
+    cudaMalloc((void **)&d_B, size);
+    cudaMalloc((void **)&d_C, size);
 
-    // Serial Operations
-    start = omp_get_wtime();
-    serialOperations(arr, serial_min, serial_max, serial_sum, serial_average);
-    end = omp_get_wtime();
-    cout << "Serial Version Time: " << end - start << " seconds\n";
-    cout << "Serial Min: " << serial_min << ", Max: " << serial_max << ", Sum: " << serial_sum << ", Average: " << serial_average << endl;
+    // Copy host data to device
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
 
-    // Parallel Operations
-    start = omp_get_wtime();
-    parallelOperations(arr, parallel_min, parallel_max, parallel_sum, parallel_average);
-    end = omp_get_wtime();
-    cout << "Parallel Version Time: " << end - start << " seconds\n";
-    cout << "Parallel Min: " << parallel_min << ", Max: " << parallel_max << ", Sum: " << parallel_sum << ", Average: " << parallel_average << endl;
+    // Launch kernel
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, N);
+
+    // Copy result from device to host
+    cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+    // Print results
+    cout << "\nResult of A + B:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "A[" << i << "] + B[" << i << "] = " << C[i] << endl;
+    }
+
+    // Free memory
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    free(A);
+    free(B);
+    free(C);
+
+    return 0;
+}
+#include <iostream>
+#include <cuda_runtime.h>
+
+using namespace std;
+
+// CUDA kernel to perform vector addition
+__global__ void vectorAdd(int *A, int *B, int *C, int N)
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < N)
+        C[i] = A[i] + B[i];
+}
+
+int main()
+{
+    int N;
+    cout << "Enter size of vectors: ";
+    cin >> N;
+
+    int size = N * sizeof(int);
+
+    // Allocate host memory
+    int *A = (int *)malloc(size);
+    int *B = (int *)malloc(size);
+    int *C = (int *)malloc(size);
+
+    // Take user input for vector A
+    cout << "Enter elements of vector A:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "A[" << i << "]: ";
+        cin >> A[i];
+    }
+
+    // Take user input for vector B
+    cout << "Enter elements of vector B:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "B[" << i << "]: ";
+        cin >> B[i];
+    }
+
+    // Allocate device memory
+    int *d_A, *d_B, *d_C;
+    cudaMalloc((void **)&d_A, size);
+    cudaMalloc((void **)&d_B, size);
+    cudaMalloc((void **)&d_C, size);
+
+    // Copy host data to device
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+
+    // Launch kernel
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, N);
+
+    // Copy result from device to host
+    cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+    // Print results
+    cout << "\nResult of A + B:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << "A[" << i << "] + B[" << i << "] = " << C[i] << endl;
+    }
+
+    // Free memory
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    free(A);
+    free(B);
+    free(C);
 
     return 0;
 }
