@@ -1,3 +1,22 @@
+//commands to setup in ubuntu
+sudo apt update
+sudo apt install python3-venv
+python3 -m venv tfenv
+source tfenv/bin/activate
+pip install --upgrade pip
+pip install tensorflow
+
+pip install notebook
+jupyter notebook
+
+terminal chi ek new window open kr...
+source tfenv/bin/activate
+
+pip install pandas
+
+//commands for setup end here 
+
+
 // initial startup commands to set up the project and install tensorflow
 
 pip install --upgrade pip  
